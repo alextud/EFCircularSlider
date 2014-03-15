@@ -332,7 +332,7 @@ static inline float AngleFromNorth(CGPoint p1, CGPoint p2, BOOL flipped) {
     float distance = sqrtf(powf(centerPoint.x - point.x, 2) +  powf(centerPoint.y - point.y, 2));
     NSLog(@"%f", distance);
     if (distance > self.ignoreTouchesInRadius) {
-        return [self pointInside:point withEvent:event];
+        return [super pointInside:point withEvent:event];
     } else {
         return NO;
     }
