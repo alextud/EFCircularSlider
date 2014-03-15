@@ -99,9 +99,9 @@
     
     //Draw the filled circle
     if((_handleType == EFDoubleCircleWithClosedCenter || _handleType == EFDoubleCircleWithOpenCenter) && fixedAngle > 5) {
-        CGContextAddArc(ctx, self.frame.size.width/2  , self.frame.size.height/2, radius, 3*M_PI/2, 3*M_PI/2-ToRad(angle+3), 0);
+        CGContextAddArc(ctx, self.frame.size.width/2  , self.frame.size.height/2, radius - self.lineRadiusInset, 3*M_PI/2, 3*M_PI/2-ToRad(angle+3), 0);
     } else {
-        CGContextAddArc(ctx, self.frame.size.width/2  , self.frame.size.height/2, radius, 3*M_PI/2, 3*M_PI/2-ToRad(angle), 0);
+        CGContextAddArc(ctx, self.frame.size.width/2  , self.frame.size.height/2, radius - self.lineRadiusInset, 3*M_PI/2, 3*M_PI/2-ToRad(angle), 0);
     }
     [_filledColor setStroke];
     CGContextSetLineWidth(ctx, _lineWidth);
@@ -119,7 +119,8 @@
 
 -(void) drawHandle:(CGContextRef)ctx{
     CGContextSaveGState(ctx);
-    CGPoint handleCenter =  [self pointFromAngle: angle];
+    CGPoint handleCenter =  [self pointFromAngle: angle radius: _lineRadiusInset];
+    
     if(_handleType == EFSemiTransparentWhiteCircle) {
         [[UIColor colorWithWhite:1.0 alpha:0.7] set];
         CGContextFillEllipseInRect(ctx, CGRectMake(handleCenter.x, handleCenter.y, _lineWidth, _lineWidth));
@@ -136,15 +137,15 @@
         CGContextFillEllipseInRect(ctx, CGRectMake(handleCenter.x, handleCenter.y, _lineWidth-1, _lineWidth-1));
     } else if(_handleType == EFDoubleCircleWithOpenCenter) {
         [_handleColor set];
-        CGContextAddArc(ctx, handleCenter.x + (_lineWidth)/2, handleCenter.y + (_lineWidth)/2, _lineWidth/2 + 5, 0, M_PI *2, 0);
-        CGContextSetLineWidth(ctx, 4);
-        CGContextSetLineCap(ctx, kCGLineCapButt);
-        CGContextDrawPath(ctx, kCGPathStroke);
-        
-        CGContextAddArc(ctx, handleCenter.x + _lineWidth/2, handleCenter.y + _lineWidth/2, _lineWidth/2, 0, M_PI *2, 0);
+        CGContextAddArc(ctx, handleCenter.x + (_lineWidth)/2, handleCenter.y + (_lineWidth)/2, _lineWidth/2 + 2, 0, M_PI *2, 0);
         CGContextSetLineWidth(ctx, 2);
         CGContextSetLineCap(ctx, kCGLineCapButt);
         CGContextDrawPath(ctx, kCGPathStroke);
+        
+        //        CGContextAddArc(ctx, handleCenter.x + _lineWidth/2, handleCenter.y + _lineWidth/2, _lineWidth/2, 0, M_PI *2, 0);
+        //        CGContextSetLineWidth(ctx, 2);
+        //        CGContextSetLineCap(ctx, kCGLineCapButt);
+        //        CGContextDrawPath(ctx, kCGPathStroke);
     } else if(_handleType == EFBigCircle) {
         [_handleColor set];
         CGContextFillEllipseInRect(ctx, CGRectMake(handleCenter.x-2.5, handleCenter.y-2.5, _lineWidth+5, _lineWidth+5));
@@ -159,7 +160,7 @@
     } else {
         NSDictionary *attributes = @{ NSFontAttributeName: _labelFont,
                                       NSForegroundColorAttributeName: _labelColor
-                                    };
+                                      };
         
         CGFloat fontSize = ceilf(_labelFont.pointSize);
         
@@ -175,11 +176,13 @@
             
             CGFloat degreesForLabel = percentageAlongCircle * 360;
             
-            CGPoint closestPointOnCircleToLabel = [self pointFromAngle:degreesForLabel];
+            CGPoint closestPointOnCircleToLabel = [self pointFromAngle:degreesForLabel radius:0];
             
             CGRect labelLocation = CGRectIntegral(CGRectMake(closestPointOnCircleToLabel.x, closestPointOnCircleToLabel.y, [self widthOfString:label withFont:_labelFont], [self heightOfString:label withFont:_labelFont]));
             
-            CGPoint centerPoint = CGPointMake(self.frame.size.width/2, self.frame.size.height/2);
+            CGRect frame = self.frame;
+            //            frame = CGRectInset(frame, -40, -40);
+            CGPoint centerPoint = CGPointMake(frame.size.width/2, frame.size.height/2);
             
             float radiansTowardsCenter = ToRad(AngleFromNorth(centerPoint, closestPointOnCircleToLabel, NO));
             
@@ -239,15 +242,15 @@
 
 #pragma mark - helper functions
 
--(CGPoint)pointFromAngle:(int)angleInt{
+-(CGPoint)pointFromAngle:(int)angleInt radius:(int) radiusInset{
     
     //Define the Circle center
     CGPoint centerPoint = CGPointMake(self.frame.size.width/2 - _lineWidth/2, self.frame.size.height/2 - _lineWidth/2);
     
     //Define The point position on the circumference
     CGPoint result;
-    result.y = round(centerPoint.y + radius * sin(ToRad(-angleInt-90))) ;
-    result.x = round(centerPoint.x + radius * cos(ToRad(-angleInt-90)));
+    result.y = round(centerPoint.y + (radius - radiusInset) * sin(ToRad(-angleInt-90))) ;
+    result.x = round(centerPoint.x + (radius - radiusInset) * cos(ToRad(-angleInt-90)));
     
     return result;
 }
